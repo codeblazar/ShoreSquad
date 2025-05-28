@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ShoreSquad - Rally your crew, track weather, and hit the next beach cleanup with our dope map app!">
+    <meta name="theme-color" content="#0077BE">
+    <title>ShoreSquad - Beach Cleanup Crew</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-water" aria-hidden="true"></i>
+                <h1>ShoreSquad</h1>
+            </div>
+            <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" role="menubar">
+                <li role="none"><a href="#home" role="menuitem">Home</a></li>
+                <li role="none"><a href="#events" role="menuitem">Events</a></li>
+                <li role="none"><a href="#map" role="menuitem">Map</a></li>
+                <li role="none"><a href="#crew" role="menuitem">My Crew</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero" role="banner">
+        <div class="hero-content">
+            <h2 class="hero-title">Rally Your Crew for Beach Cleanups!</h2>
+            <p class="hero-subtitle">Track weather, find locations, and make eco-action fun with your squad</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" id="join-cleanup">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    Join a Cleanup
+                </button>
+                <button class="btn btn-secondary" id="create-event">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    Create Event
+                </button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card weather-card">
+                <i class="fas fa-sun"></i>
+                <span>Perfect beach day!</span>
+            </div>
+            <div class="floating-card crew-card">
+                <i class="fas fa-users"></i>
+                <span>12 squad members ready</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats" role="region" aria-label="Impact statistics">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    <h3 class="stat-number" data-target="2500">0</h3>
+                    <p>Pounds Collected</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                    <h3 class="stat-number" data-target="45">0</h3>
+                    <p>Beaches Cleaned</p>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    <h3 class="stat-number" data-target="350">0</h3>
+                    <p>Squad Members</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="events" class="events" role="region" aria-label="Upcoming cleanup events">
+        <div class="container">
+            <h2 class="section-title">Upcoming Cleanups</h2>
+            <div class="events-grid" id="events-grid">
+                <!-- Events will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map" class="map-section" role="region" aria-label="Cleanup locations map">
+        <div class="container">
+            <h2 class="section-title">Find Your Beach</h2>
+            <div class="map-container">
+                <div id="map" class="map-placeholder">
+                    <i class="fas fa-map" aria-hidden="true"></i>
+                    <p>Interactive map loading...</p>
+                </div>
+                <div class="map-controls">
+                    <button class="btn btn-map" id="locate-me" aria-label="Find my location">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button class="btn btn-map" id="weather-toggle" aria-label="Toggle weather overlay">
+                        <i class="fas fa-cloud-sun"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Crew Section -->
+    <section id="crew" class="crew" role="region" aria-label="Your cleanup crew">
+        <div class="container">
+            <h2 class="section-title">Your Squad</h2>
+            <div class="crew-grid" id="crew-grid">
+                <!-- Crew members will be populated by JavaScript -->
+            </div>
+            <button class="btn btn-primary btn-full" id="invite-friends">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                Invite Friends to Your Squad
+            </button>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+        <a href="#home" class="nav-item active" aria-label="Home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#events" class="nav-item" aria-label="Events">
+            <i class="fas fa-calendar"></i>
+            <span>Events</span>
+        </a>
+        <a href="#map" class="nav-item" aria-label="Map">
+            <i class="fas fa-map"></i>
+            <span>Map</span>
+        </a>
+        <a href="#crew" class="nav-item" aria-label="Crew">
+            <i class="fas fa-users"></i>
+            <span>Squad</span>
+        </a>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-spinner"></div>
+        <p>Loading ShoreSquad...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>
