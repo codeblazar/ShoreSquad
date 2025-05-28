@@ -1,11 +1,12 @@
 // Service Worker for ShoreSquad PWA
-const CACHE_NAME = 'shoresquad-v1';
+const CACHE_NAME = 'shoresquad-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/css/styles.css',
   '/js/app.js',
   '/manifest.json',
+  '/assets/favicon.svg',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'
 ];

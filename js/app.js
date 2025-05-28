@@ -85,21 +85,24 @@ class ShoreSquad {
         this.events = [
             {
                 id: 1,
-                title: "Santa Monica Beach Cleanup",
+                title: "Pasir Ris Beach Cleanup",
                 date: "2025-06-01",
                 time: "09:00 AM",
-                location: "Santa Monica Pier",
+                location: "Pasir Ris Beach, Singapore",
+                coordinates: { lat: 1.381497, lng: 103.955574 },
                 participants: 12,
                 organizer: "Alex Chen",
                 weather: "sunny",
-                difficulty: "easy"
+                difficulty: "easy",
+                isNext: true
             },
             {
                 id: 2,
-                title: "Venice Beach Squad Action",
+                title: "East Coast Park Squad Action",
                 date: "2025-06-03",
                 time: "08:30 AM",
-                location: "Venice Beach Boardwalk",
+                location: "East Coast Park, Singapore",
+                coordinates: { lat: 1.3006, lng: 103.9271 },
                 participants: 8,
                 organizer: "Maya Rodriguez",
                 weather: "partly-cloudy",
@@ -107,10 +110,11 @@ class ShoreSquad {
             },
             {
                 id: 3,
-                title: "Malibu Coast Conservation",
+                title: "Sentosa Beach Conservation",
                 date: "2025-06-07",
                 time: "07:00 AM",
-                location: "Malibu State Beach",
+                location: "Sentosa Beach, Singapore",
+                coordinates: { lat: 1.2494, lng: 103.8303 },
                 participants: 15,
                 organizer: "Jordan Kim",
                 weather: "sunny",
@@ -137,9 +141,10 @@ class ShoreSquad {
         if (!eventsGrid) return;
 
         eventsGrid.innerHTML = this.events.map(event => `
-            <div class="event-card" role="article" tabindex="0">
+            <div class="event-card ${event.isNext ? 'next-event' : ''}" role="article" tabindex="0">
                 <div class="event-header">
                     <div class="event-date">${this.formatDate(event.date)}</div>
+                    ${event.isNext ? '<div class="next-badge">NEXT!</div>' : ''}
                     <i class="fas fa-${this.getWeatherIcon(event.weather)}" aria-label="Weather: ${event.weather}"></i>
                 </div>
                 <h3 class="event-title">${event.title}</h3>
@@ -157,9 +162,9 @@ class ShoreSquad {
                     </div>
                     <span class="participants-count">${event.participants} squad members</span>
                 </div>
-                <button class="btn btn-primary btn-full" onclick="shoreSquad.joinEvent(${event.id})" style="margin-top: 1rem;">
+                <button class="btn ${event.isNext ? 'btn-secondary' : 'btn-primary'} btn-full" onclick="shoreSquad.joinEvent(${event.id})" style="margin-top: 1rem;">
                     <i class="fas fa-user-plus" aria-hidden="true"></i>
-                    Join Squad
+                    ${event.isNext ? 'Join Next Cleanup!' : 'Join Squad'}
                 </button>
             </div>
         `).join('');
@@ -383,17 +388,13 @@ class ShoreSquad {
     updateMapWithUserLocation() {
         const mapElement = document.getElementById('map');
         if (mapElement && this.userLocation) {
-            // In a real app, this would interact with a mapping library
-            mapElement.innerHTML = `
-                <div style="padding: 2rem; text-align: center;">
-                    <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: var(--primary-blue); margin-bottom: 1rem;"></i>
-                    <p>Map centered on your location</p>
-                    <p style="color: var(--gray-500); font-size: 0.9rem;">
-                        Lat: ${this.userLocation.lat.toFixed(4)}, 
-                        Lng: ${this.userLocation.lng.toFixed(4)}
-                    </p>
-                </div>
-            `;
+            // Update the Google Maps iframe to show user location
+            const nextEvent = this.events.find(e => e.isNext);
+            if (nextEvent) {
+                const newSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.6234567890123!2d${nextEvent.coordinates.lng}!3d${nextEvent.coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMjInNTMuNCJOIDEwM8KwNTcnMjAuMSJF!5e0!3m2!1sen!2ssg!4v1000000000000!5m2!1sen!2ssg&markers=color:orange%7Clabel:Next%20Cleanup%7C${nextEvent.coordinates.lat},${nextEvent.coordinates.lng}%7Ccolor:blue%7Clabel:You%7C${this.userLocation.lat},${this.userLocation.lng}`;
+                mapElement.src = newSrc;
+            }
+            this.showNotification('Map updated with your location and next cleanup spot!', 'success');
         }
     }
 
