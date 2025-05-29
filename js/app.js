@@ -19,6 +19,7 @@ class ShoreSquad {
         this.initializeCounters();
         this.handleNavigation();
         this.simulateLoading();
+        this.loadWeatherData();
         
         // Check for geolocation support
         if ('geolocation' in navigator) {
@@ -53,10 +54,8 @@ class ShoreSquad {
 
         // Map controls
         const locateMeBtn = document.getElementById('locate-me');
-        const weatherToggleBtn = document.getElementById('weather-toggle');
         
         locateMeBtn?.addEventListener('click', () => this.handleLocateMe());
-        weatherToggleBtn?.addEventListener('click', () => this.handleWeatherToggle());
 
         // Invite friends button
         const inviteFriendsBtn = document.getElementById('invite-friends');
@@ -352,12 +351,6 @@ class ShoreSquad {
         }
     }
 
-    handleWeatherToggle() {
-        this.showNotification('Toggling weather overlay...', 'info');
-        // Simulate weather data toggle
-        this.fetchWeatherData();
-    }
-
     handleInviteFriends() {
         if (navigator.share) {
             navigator.share({
@@ -398,24 +391,350 @@ class ShoreSquad {
         }
     }
 
-    // Fetch weather data
-    async fetchWeatherData() {
+    // Weather API Integration Methods
+    async loadWeatherData() {
+        const weatherLoading = document.getElementById('weather-loading');
+        const weatherError = document.getElementById('weather-error');
+        const weatherToday = document.getElementById('weather-today');
+        const weatherForecast = document.getElementById('weather-forecast');
+
         try {
-            // Simulate weather API call
-            this.weatherData = {
-                temperature: 72,
-                condition: 'sunny',
-                windSpeed: 8,
-                waveHeight: 2.5
-            };
-            
-            this.showNotification(`Perfect weather! ${this.weatherData.temperature}°F, ${this.weatherData.condition}`, 'success');
+            // Show loading state
+            this.showWeatherLoading(true);
+            this.hideWeatherError();
+
+            // Fetch both 24-hour and 4-day weather data from NEA APIs
+            const [todayData, forecastData] = await Promise.all([
+                this.fetchTodayWeather(),
+                this.fetch4DayForecast()
+            ]);
+
+            // Hide loading and render weather data
+            this.showWeatherLoading(false);
+            this.renderTodayWeather(todayData);
+            this.render4DayForecast(forecastData);
+
         } catch (error) {
-            this.showNotification('Unable to fetch weather data', 'error');
+            console.error('Weather API Error:', error);
+            this.showWeatherLoading(false);
+            this.showWeatherError();
         }
     }
 
-    // Utility functions
+    async fetchTodayWeather() {
+        try {
+            const response = await fetch('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return this.processTodayWeatherData(data);
+        } catch (error) {
+            console.warn('NEA API not accessible, using fallback data:', error);
+            // Return fallback weather data
+            return this.getFallbackTodayWeather();
+        }
+    }
+
+    async fetch4DayForecast() {
+        try {
+            const response = await fetch('https://api.data.gov.sg/v1/environment/4-day-weather-forecast');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return this.process4DayForecastData(data);
+        } catch (error) {
+            console.warn('NEA API not accessible, using fallback data:', error);
+            // Return fallback forecast data
+            return this.getFallback4DayForecast();
+        }
+    }
+
+    processTodayWeatherData(data) {
+        const latest = data.items && data.items.length > 0 ? data.items[0] : null;
+        
+        if (!latest) {
+            throw new Error('No weather data available');
+        }
+
+        const general = latest.general || {};
+        
+        return {
+            temperature: {
+                high: general.temperature?.high || 32,
+                low: general.temperature?.low || 26
+            },
+            humidity: {
+                high: general.relative_humidity?.high || 85,
+                low: general.relative_humidity?.low || 65
+            },
+            forecast: general.forecast || 'Partly Cloudy',
+            wind: general.wind?.direction || 'Variable',
+            date: new Date(latest.valid_period?.start || Date.now()),
+            timestamp: latest.timestamp
+        };
+    }
+
+    process4DayForecastData(data) {
+        const forecasts = data.items && data.items.length > 0 ? data.items[0].forecasts || [] : [];
+        
+        return forecasts.slice(0, 4).map(forecast => ({
+            date: new Date(forecast.date),
+            forecast: forecast.forecast || 'Partly Cloudy',
+            temperature: {
+                high: forecast.temperature?.high || 32,
+                low: forecast.temperature?.low || 26
+            },
+            humidity: {
+                high: forecast.relative_humidity?.high || 85,
+                low: forecast.relative_humidity?.low || 65
+            },
+            wind: forecast.wind?.direction || 'Variable'
+        }));
+    }
+
+    getFallbackTodayWeather() {
+        return {
+            temperature: {
+                high: 32,
+                low: 26
+            },
+            humidity: {
+                high: 85,
+                low: 65
+            },
+            forecast: 'Partly Cloudy',
+            wind: 'Light winds',
+            date: new Date(),
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    getFallback4DayForecast() {
+        const forecasts = [];
+        const conditions = ['Partly Cloudy', 'Sunny', 'Cloudy', 'Light Showers'];
+        
+        for (let i = 1; i <= 4; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() + i);
+            
+            forecasts.push({
+                date: date,
+                forecast: conditions[i - 1],
+                temperature: {
+                    high: 30 + Math.floor(Math.random() * 4),
+                    low: 24 + Math.floor(Math.random() * 4)
+                },
+                humidity: {
+                    high: 80 + Math.floor(Math.random() * 10),
+                    low: 60 + Math.floor(Math.random() * 10)
+                },
+                wind: 'Light winds'
+            });
+        }
+        
+        return forecasts;
+    }
+
+    // Enhanced weather recommendation for beach cleanups
+    getWeatherRecommendation(weatherData) {
+        const forecast = weatherData.forecast.toLowerCase();
+        const temp = (weatherData.temperature.high + weatherData.temperature.low) / 2;
+        
+        if (forecast.includes('sunny') && temp >= 28 && temp <= 32) {
+            return {
+                level: 'excellent',
+                message: '🌞 Perfect beach cleanup weather!',
+                icon: 'fas fa-thumbs-up',
+                color: 'var(--accent-green)'
+            };
+        } else if (forecast.includes('partly') && temp >= 26) {
+            return {
+                level: 'good',
+                message: '⛅ Great conditions for outdoor cleanup',
+                icon: 'fas fa-check-circle',
+                color: 'var(--primary-blue)'
+            };
+        } else if (forecast.includes('rain') || forecast.includes('shower')) {
+            return {
+                level: 'caution',
+                message: '🌧️ Consider rescheduling - rain expected',
+                icon: 'fas fa-exclamation-triangle',
+                color: 'var(--coral-orange)'
+            };
+        } else {
+            return {
+                level: 'moderate',
+                message: '☁️ Okay for cleanup with precautions',
+                icon: 'fas fa-info-circle',
+                color: 'var(--gray-500)'
+            };
+        }
+    }
+
+    renderTodayWeather(weatherData) {
+        const todayContainer = document.getElementById('weather-today');
+        
+        if (!todayContainer) return;
+
+        const currentTemp = Math.round((weatherData.temperature.high + weatherData.temperature.low) / 2);
+        const weatherIcon = this.getWeatherIconClass(weatherData.forecast);
+        const recommendation = this.getWeatherRecommendation(weatherData);
+        
+        todayContainer.innerHTML = `
+            <div class="weather-today-header">
+                <div>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--primary-blue);">Today's Weather</h3>
+                    <p class="weather-today-condition">${weatherData.forecast}</p>
+                </div>
+                <i class="weather-today-icon ${weatherIcon}"></i>
+            </div>
+            <div class="weather-today-temp">${currentTemp}°C</div>
+            
+            <div style="margin: 1rem 0; padding: 0.75rem; background: ${recommendation.color}15; border-left: 4px solid ${recommendation.color}; border-radius: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: ${recommendation.color}; font-weight: 600;">
+                    <i class="${recommendation.icon}"></i>
+                    <span>${recommendation.message}</span>
+                </div>
+            </div>
+            
+            <div class="weather-details">
+                <div class="weather-detail">
+                    <i class="fas fa-thermometer-half"></i>
+                    <div>
+                        <div class="weather-detail-label">High/Low</div>
+                        <div class="weather-detail-value">${weatherData.temperature.high}°/${weatherData.temperature.low}°C</div>
+                    </div>
+                </div>
+                <div class="weather-detail">
+                    <i class="fas fa-tint"></i>
+                    <div>
+                        <div class="weather-detail-label">Humidity</div>
+                        <div class="weather-detail-value">${weatherData.humidity.low}-${weatherData.humidity.high}%</div>
+                    </div>
+                </div>
+                <div class="weather-detail">
+                    <i class="fas fa-wind"></i>
+                    <div>
+                        <div class="weather-detail-label">Wind</div>
+                        <div class="weather-detail-value">${weatherData.wind}</div>
+                    </div>
+                </div>
+                <div class="weather-detail">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <div class="weather-detail-label">Updated</div>
+                        <div class="weather-detail-value">${new Date(weatherData.timestamp).toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    render4DayForecast(forecastData) {
+        const forecastContainer = document.getElementById('weather-forecast');
+        
+        if (!forecastContainer || !forecastData.length) return;
+
+        forecastContainer.innerHTML = `
+            <div class="forecast-header">
+                <h3>4-Day Forecast</h3>
+                <p style="color: var(--gray-700); margin: 0;">Plan your beach cleanups ahead</p>
+            </div>
+            <div class="forecast-grid">
+                ${forecastData.map(day => `
+                    <div class="forecast-day">
+                        <div class="forecast-date">${this.formatForecastDate(day.date)}</div>
+                        <i class="forecast-icon ${this.getWeatherIconClass(day.forecast)}"></i>
+                        <div class="forecast-temps">
+                            <span class="forecast-high">${day.temperature.high}°</span>
+                            <span class="forecast-low">${day.temperature.low}°</span>
+                        </div>
+                        <div class="forecast-condition">${day.forecast}</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray-500);">
+                            ${day.humidity.low}-${day.humidity.high}% humidity
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    showWeatherLoading(show) {
+        const loadingElement = document.getElementById('weather-loading');
+        const todayElement = document.getElementById('weather-today');
+        const forecastElement = document.getElementById('weather-forecast');
+        
+        if (show) {
+            loadingElement.style.display = 'flex';
+            todayElement.style.display = 'none';
+            forecastElement.style.display = 'none';
+        } else {
+            loadingElement.style.display = 'none';
+            todayElement.style.display = 'block';
+            forecastElement.style.display = 'block';
+        }
+    }
+
+    showWeatherError() {
+        const errorElement = document.getElementById('weather-error');
+        const todayElement = document.getElementById('weather-today');
+        const forecastElement = document.getElementById('weather-forecast');
+        
+        errorElement.style.display = 'flex';
+        todayElement.style.display = 'none';
+        forecastElement.style.display = 'none';
+    }
+
+    hideWeatherError() {
+        const errorElement = document.getElementById('weather-error');
+        errorElement.style.display = 'none';
+    }
+
+    getWeatherIconClass(forecast) {
+        const condition = forecast.toLowerCase();
+        
+        if (condition.includes('sunny') || condition.includes('fair')) {
+            return 'fas fa-sun';
+        } else if (condition.includes('partly cloudy') || condition.includes('partly')) {
+            return 'fas fa-cloud-sun';
+        } else if (condition.includes('cloudy') || condition.includes('overcast')) {
+            return 'fas fa-cloud';
+        } else if (condition.includes('shower') || condition.includes('rain')) {
+            return 'fas fa-cloud-rain';
+        } else if (condition.includes('thunderstorm') || condition.includes('thunder')) {
+            return 'fas fa-bolt';
+        } else if (condition.includes('hazy') || condition.includes('haze')) {
+            return 'fas fa-smog';
+        } else {
+            return 'fas fa-cloud-sun'; // Default
+        }
+    }
+
+    formatForecastDate(date) {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        if (date.toDateString() === today.toDateString()) {
+            return 'Today';
+        } else if (date.toDateString() === tomorrow.toDateString()) {
+            return 'Tomorrow';
+        } else {
+            return date.toLocaleDateString('en-SG', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+    }
+
+    // ...existing utility functions...
     formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { 

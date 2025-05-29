@@ -41,10 +41,31 @@
                 <li role="none"><a href="#home" role="menuitem">Home</a></li>
                 <li role="none"><a href="#events" role="menuitem">Events</a></li>
                 <li role="none"><a href="#map" role="menuitem">Map</a></li>
+                <li role="none"><a href="#weather" role="menuitem">Weather</a></li>
                 <li role="none"><a href="#crew" role="menuitem">My Crew</a></li>
             </ul>
         </div>
     </nav>
+
+    <!-- Pristine Beach Banner -->
+    <section class="beach-banner">
+        <div class="beach-banner-content">
+            <div class="beach-banner-waves">
+                <div class="wave wave-1"></div>
+                <div class="wave wave-2"></div>
+                <div class="wave wave-3"></div>
+            </div>
+            <div class="beach-banner-text">
+                <h2>🏖️ Pristine Beaches, Cleaner Future</h2>
+                <p>Join us in preserving Singapore's beautiful coastlines</p>
+            </div>
+            <div class="beach-banner-elements">
+                <div class="palm-tree">🌴</div>
+                <div class="seashell">🐚</div>
+                <div class="sun">☀️</div>
+            </div>
+        </div>
+    </section>
 
     <!-- Hero Section -->
     <section id="home" class="hero" role="banner">
@@ -80,8 +101,8 @@
             <div class="stats-grid">
                 <div class="stat-item">
                     <i class="fas fa-trash-alt" aria-hidden="true"></i>
-                    <h3 class="stat-number" data-target="2500">0</h3>
-                    <p>Pounds Collected</p>
+                    <h3 class="stat-number" data-target="1135">0</h3>
+                    <p>Kilograms Collected</p>
                 </div>
                 <div class="stat-item">
                     <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
@@ -133,12 +154,29 @@
                     <button class="btn btn-map" id="locate-me" aria-label="Find my location">
                         <i class="fas fa-location-arrow"></i>
                     </button>
-                    <button class="btn btn-map" id="weather-toggle" aria-label="Toggle weather overlay">
-                        <i class="fas fa-cloud-sun"></i>
-                    </button>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Weather Section -->
+    <section class="weather-section" id="weather">
+      <div class="weather-container">
+        <div class="weather-today">
+          <div class="weather-today-header">
+            <span class="weather-today-icon" aria-label="Weather icon">☀️</span>
+            <span class="weather-today-temp" id="weather-today-temp">--°C</span>
+          </div>
+          <div class="weather-today-condition" id="weather-today-condition">Loading...</div>
+          <div class="weather-details" id="weather-today-details"></div>
+        </div>
+        <div class="weather-forecast">
+          <div class="forecast-header">
+            <h3><span class="forecast-icon" aria-label="Forecast icon">☀️</span> 4-Day Forecast</h3>
+          </div>
+          <div class="forecast-grid" id="weather-forecast-grid"></div>
+        </div>
+      </div>
     </section>
 
     <!-- Crew Section -->
@@ -168,6 +206,10 @@
         <a href="#map" class="nav-item" aria-label="Map">
             <i class="fas fa-map"></i>
             <span>Map</span>
+        </a>
+        <a href="#weather" class="nav-item" aria-label="Weather">
+            <i class="fas fa-cloud-sun"></i>
+            <span>Weather</span>
         </a>
         <a href="#crew" class="nav-item" aria-label="Crew">
             <i class="fas fa-users"></i>
