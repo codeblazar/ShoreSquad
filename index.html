@@ -69,28 +69,23 @@
 
     <!-- Hero Section -->
     <section id="home" class="hero" role="banner">
-        <div class="hero-content">
-            <h2 class="hero-title">Rally Your Crew for Beach Cleanups!</h2>
-            <p class="hero-subtitle">Track weather, find locations, and make eco-action fun with your squad</p>
-            <div class="hero-actions">
-                <button class="btn btn-primary" id="join-cleanup">
-                    <i class="fas fa-users" aria-hidden="true"></i>
-                    Join a Cleanup
-                </button>
-                <button class="btn btn-secondary" id="create-event">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                    Create Event
-                </button>
+        <div class="container">
+            <div class="hero-content">
+                <h2 class="hero-title">Rally Your Crew for Beach Cleanups!</h2>
+                <p class="hero-subtitle">Track weather, find locations, and make eco-action fun with your squad</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" id="join-cleanup">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        Join a Cleanup
+                    </button>
+                    <button class="btn btn-secondary" id="create-event">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        Create Event
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="hero-visual">
-            <div class="floating-card weather-card">
-                <i class="fas fa-sun"></i>
-                <span>Perfect beach day!</span>
-            </div>
-            <div class="floating-card crew-card">
-                <i class="fas fa-users"></i>
-                <span>12 squad members ready</span>
+            <div class="hero-visual">
+                <!-- Floating cards removed to prevent button overlap -->
             </div>
         </div>
     </section>
@@ -162,7 +157,7 @@
     <!-- Weather Section -->
     <section class="weather-section" id="weather">
       <div class="weather-container">
-        <div class="weather-today">
+        <div class="weather-today" id="weather-today">
           <div class="weather-today-header">
             <span class="weather-today-icon" aria-label="Weather icon">☀️</span>
             <span class="weather-today-temp" id="weather-today-temp">--°C</span>

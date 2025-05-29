@@ -393,36 +393,73 @@ class ShoreSquad {
 
     // Weather API Integration Methods
     async loadWeatherData() {
-        const weatherLoading = document.getElementById('weather-loading');
-        const weatherError = document.getElementById('weather-error');
-        const weatherToday = document.getElementById('weather-today');
-        const weatherForecast = document.getElementById('weather-forecast');
+        console.log('Starting weather data load...');
+        const weatherTodayEl = document.getElementById('weather-today');
+        const weatherForecastEl = document.getElementById('weather-forecast-grid');
+        const weatherTodayConditionEl = document.getElementById('weather-today-condition');
+
+        // Ensure elements exist before trying to update them
+        if (!weatherTodayEl || !weatherForecastEl || !weatherTodayConditionEl) {
+            console.error("Weather UI elements not found. Aborting weather load.");
+            console.log('Found elements:', { weatherTodayEl: !!weatherTodayEl, weatherForecastEl: !!weatherForecastEl, weatherTodayConditionEl: !!weatherTodayConditionEl });
+            return;
+        }
+
+        console.log('All weather UI elements found, proceeding with data load...');
+        this.showWeatherLoading(true); // Show loading state for the entire weather section
+        this.hideWeatherError(); // Hide any previous error messages
 
         try {
-            // Show loading state
-            this.showWeatherLoading(true);
-            this.hideWeatherError();
-
             // Fetch both 24-hour and 4-day weather data from NEA APIs
             const [todayData, forecastData] = await Promise.all([
                 this.fetchTodayWeather(),
                 this.fetch4DayForecast()
             ]);
 
-            // Hide loading and render weather data
-            this.showWeatherLoading(false);
-            this.renderTodayWeather(todayData);
-            this.render4DayForecast(forecastData);
+            console.log('Weather data fetched:', { todayData, forecastData });
+
+            // Check if data was successfully fetched (not just fallback)
+            if (todayData && forecastData) {
+                console.log('Rendering weather data...');
+                this.renderTodayWeather(todayData);
+                this.render4DayForecast(forecastData);
+                this.hideWeatherError(); // Ensure error is hidden on success
+                console.log('Weather data rendered successfully');
+            } else {
+                // This case might occur if fallbacks are returned due to API errors
+                // and we want to explicitly show an error or a 'using fallback' message.
+                // For now, we assume fallbacks are acceptable and don't show an error.
+                // If fallbacks themselves are an issue, the catch block will handle it.
+                console.warn("Weather data might be using fallbacks.");
+            }
 
         } catch (error) {
-            console.error('Weather API Error:', error);
-            this.showWeatherLoading(false);
-            this.showWeatherError();
+            console.error('Weather API Error in loadWeatherData:', error);
+            this.showWeatherError("Could not load live weather data. Displaying estimates.");
+            // Attempt to render with fallback data if primary fetch fails catastrophically
+            try {
+                const fallbackToday = this.getFallbackTodayWeather();
+                const fallbackForecast = this.getFallback4DayForecast();
+                this.renderTodayWeather(fallbackToday);
+                this.render4DayForecast(fallbackForecast);
+            } catch (fallbackError) {
+                console.error('Error rendering fallback weather data:', fallbackError);
+                // If even fallbacks fail, ensure a clear error is shown
+                if (weatherTodayConditionEl) {
+                    weatherTodayConditionEl.textContent = 'Weather data unavailable.';
+                }
+                // Potentially clear out forecast grid or show an error there too
+                const forecastGrid = document.getElementById('weather-forecast-grid');
+                if (forecastGrid) forecastGrid.innerHTML = '<p class="weather-error-message">Forecast unavailable.</p>';
+            }
+        } finally {
+            this.showWeatherLoading(false); // Hide loading state regardless of outcome
         }
     }
 
     async fetchTodayWeather() {
         try {
+            console.log('Fetching today weather from NEA API...');
             const response = await fetch('https://api.data.gov.sg/v1/environment/24-hour-weather-forecast');
             
             if (!response.ok) {
@@ -430,9 +467,10 @@ class ShoreSquad {
             }
             
             const data = await response.json();
+            console.log('Today weather data received:', data);
             return this.processTodayWeatherData(data);
         } catch (error) {
-            console.warn('NEA API not accessible, using fallback data:', error);
+            console.warn('NEA API not accessible, using fallback data:', error.message);
             // Return fallback weather data
             return this.getFallbackTodayWeather();
         }
@@ -440,6 +478,7 @@ class ShoreSquad {
 
     async fetch4DayForecast() {
         try {
+            console.log('Fetching 4-day forecast from NEA API...');
             const response = await fetch('https://api.data.gov.sg/v1/environment/4-day-weather-forecast');
             
             if (!response.ok) {
@@ -447,9 +486,10 @@ class ShoreSquad {
             }
             
             const data = await response.json();
+            console.log('4-day forecast data received:', data);
             return this.process4DayForecastData(data);
         } catch (error) {
-            console.warn('NEA API not accessible, using fallback data:', error);
+            console.warn('NEA 4-day API not accessible, using fallback data:', error.message);
             // Return fallback forecast data
             return this.getFallback4DayForecast();
         }
@@ -637,63 +677,53 @@ class ShoreSquad {
     }
 
     render4DayForecast(forecastData) {
-        const forecastContainer = document.getElementById('weather-forecast');
+        const forecastContainer = document.getElementById('weather-forecast-grid');
         
         if (!forecastContainer || !forecastData.length) return;
 
-        forecastContainer.innerHTML = `
-            <div class="forecast-header">
-                <h3>4-Day Forecast</h3>
-                <p style="color: var(--gray-700); margin: 0;">Plan your beach cleanups ahead</p>
+        forecastContainer.innerHTML = forecastData.map(day => `
+            <div class="forecast-day">
+                <div class="forecast-date">${this.formatForecastDate(day.date)}</div>
+                <i class="forecast-icon ${this.getWeatherIconClass(day.forecast)}"></i>
+                <div class="forecast-temps">
+                    <span class="forecast-high">${day.temperature.high}°</span>
+                    <span class="forecast-low">${day.temperature.low}°</span>
+                </div>
+                <div class="forecast-condition">${day.forecast}</div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray-500);">
+                    ${day.humidity.low}-${day.humidity.high}% humidity
+                </div>
             </div>
-            <div class="forecast-grid">
-                ${forecastData.map(day => `
-                    <div class="forecast-day">
-                        <div class="forecast-date">${this.formatForecastDate(day.date)}</div>
-                        <i class="forecast-icon ${this.getWeatherIconClass(day.forecast)}"></i>
-                        <div class="forecast-temps">
-                            <span class="forecast-high">${day.temperature.high}°</span>
-                            <span class="forecast-low">${day.temperature.low}°</span>
-                        </div>
-                        <div class="forecast-condition">${day.forecast}</div>
-                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--gray-500);">
-                            ${day.humidity.low}-${day.humidity.high}% humidity
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        `).join('');
     }
 
-    showWeatherLoading(show) {
-        const loadingElement = document.getElementById('weather-loading');
-        const todayElement = document.getElementById('weather-today');
-        const forecastElement = document.getElementById('weather-forecast');
-        
-        if (show) {
-            loadingElement.style.display = 'flex';
-            todayElement.style.display = 'none';
-            forecastElement.style.display = 'none';
-        } else {
-            loadingElement.style.display = 'none';
-            todayElement.style.display = 'block';
-            forecastElement.style.display = 'block';
+    showWeatherLoading(isLoading) {
+        // Update the condition text to show loading state
+        const weatherTodayConditionEl = document.getElementById('weather-today-condition');
+        if (weatherTodayConditionEl) {
+            if (isLoading) {
+                weatherTodayConditionEl.textContent = 'Loading weather...';
+            }
         }
     }
 
-    showWeatherError() {
-        const errorElement = document.getElementById('weather-error');
-        const todayElement = document.getElementById('weather-today');
-        const forecastElement = document.getElementById('weather-forecast');
+    showWeatherError(message = "Failed to load weather data. Please try again later.") {
+        // Show error in the condition element
+        const weatherTodayConditionEl = document.getElementById('weather-today-condition');
+        if (weatherTodayConditionEl) {
+            weatherTodayConditionEl.textContent = message;
+        }
         
-        errorElement.style.display = 'flex';
-        todayElement.style.display = 'none';
-        forecastElement.style.display = 'none';
+        // Clear forecast grid and show error there too
+        const forecastGrid = document.getElementById('weather-forecast-grid');
+        if (forecastGrid) {
+            forecastGrid.innerHTML = '<p style="text-align: center; color: var(--coral-orange); padding: 2rem;">Forecast unavailable</p>';
+        }
     }
 
     hideWeatherError() {
-        const errorElement = document.getElementById('weather-error');
-        errorElement.style.display = 'none';
+        // This method is now primarily handled by the render methods
+        // when they successfully update the content
     }
 
     getWeatherIconClass(forecast) {

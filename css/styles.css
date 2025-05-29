@@ -365,40 +365,6 @@ p {
   align-items: center;
 }
 
-.floating-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 8px 32px rgba(0, 119, 190, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  font-weight: 500;
-  animation: float 3s ease-in-out infinite;
-  position: absolute;
-}
-
-.weather-card {
-  top: 20%;
-  right: 10%;
-  color: var(--coral-orange);
-  animation-delay: 0s;
-}
-
-.crew-card {
-  bottom: 20%;
-  left: 10%;
-  color: var(--primary-blue);
-  animation-delay: 1.5s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
 /* Stats Section */
 .stats {
   padding: var(--spacing-2xl) 0;

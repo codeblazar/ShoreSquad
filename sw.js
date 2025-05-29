@@ -13,6 +13,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -24,6 +25,13 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+  // Always fetch weather API requests from network
+  if (url.includes('data.gov.sg') || url.includes('openweathermap.org')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  // Otherwise, use cache-first for static assets
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -37,7 +45,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -51,4 +59,5 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
